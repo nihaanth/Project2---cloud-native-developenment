@@ -1,0 +1,8 @@
+Flask
+gunicorn
+
+google-cloud-storage
+
+google-generativeai
+
+pillow
