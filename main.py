@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, send_file,Response
+from flask import Flask, request, render_template, redirect, url_for, flash, send_file, Response
 from google.cloud import storage
 import google.generativeai as genai
 import os
@@ -18,8 +18,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 # Initialize clients
 storage_client = storage.Client()
 bucket = storage_client.bucket(BUCKET_NAME)
-
-
 
 # Configure Gemini AI
 try:
@@ -46,12 +44,12 @@ def process_image_with_gemini(file):
     
     try:
         response = model.generate_content(
-            [Image.open(file),PROMPT]
+            [Image.open(file), PROMPT]
         )
         
-        if response and response.text: # check if a valid response was received
+        if response and response.text:  # Check if a valid response was received
             return response.text
-        else: # Gemini Returned an empty response
+        else:  # Gemini returned an empty response
             return "Gemini returned no content"
     except Exception as e:
         print(f"Error processing image with Gemini: {str(e)}")
@@ -59,23 +57,38 @@ def process_image_with_gemini(file):
 
 @app.route('/')
 def index():
-    files = []
+    image_data = []  # Will hold image filename and description data
+    
     blobs = bucket.list_blobs()
     for blob in blobs:
-        if(blob.name.endswith('jpeg') or blob.name.endswith('jpg') or blob.name.endswith('png')):
-            files.append(blob.name)
-             
+        if blob.name.endswith(('jpeg', 'jpg', 'png', 'gif')):
+            # Get image description
+            description_filename = os.path.splitext(blob.name)[0] + '_description.json'
+            try:
+                description_blob = bucket.blob(description_filename)
+                description_data = json.loads(description_blob.download_as_string())
+                image_data.append({
+                    'filename': blob.name,
+                    'description': description_data.get('description', 'No description available')
+                })
+            except Exception as e:
+                print(f"Error fetching description for {blob.name}: {str(e)}")
+                image_data.append({
+                    'filename': blob.name,
+                    'description': 'No description available'
+                })
 
-    return render_template('index.html', files=files)
+    return render_template('index.html', image_data=image_data)
+
+
 @app.route('/images/<imagename>')
 def view_image(imagename):
-   
     blob = bucket.blob(imagename)
     file_data = blob.download_as_bytes()
     return Response(io.BytesIO(file_data), mimetype='image/jpeg')
 
-@app.route('/upload', methods=['POST'])
 
+@app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         flash('No file part')
@@ -88,7 +101,7 @@ def upload_file():
 
     if file and allowed_file(file.filename):
         try:
-            filename = (file.filename)
+            filename = file.filename
 
             # Save file locally temporarily
             local_path = os.path.join('/tmp', filename)
@@ -101,29 +114,24 @@ def upload_file():
             # Process with Gemini AI
             description = process_image_with_gemini(file)
 
-
             if description:
-                print (f"Gemini Description: {description}")
-    # Create description object with metadata
-                description_data = {
-        'description': description,
+                print(f"Gemini Description: {description}")
+                # Create description object with metadata
+                description_data = {'description': description}
 
-
-    }
-
-    # Correctly get the base name *without* the extension
+                # Correctly get the base name *without* the extension
                 base_name = os.path.splitext(filename)[0]
-    # Construct the json filename with the base_name
+                # Construct the JSON filename with the base_name
                 json_filename = f"{base_name}_description.json"
+                print(f"Uploading Description JSON: {json_filename}")  # Debug print
 
-                print(f"Uploading Description JSON: {json_filename}") # Debug print
-
-    # Upload JSON to the same bucket
+                # Upload JSON to the same bucket
                 description_blob = bucket.blob(json_filename)
                 description_blob.upload_from_string(
-       json.dumps(description_data, indent=2),
-        content_type='application/json'
-    )
+                    json.dumps(description_data, indent=2),
+                    content_type='application/json'
+                )
+
             # Clean up local file
             os.remove(local_path)
 
@@ -136,6 +144,7 @@ def upload_file():
 
     flash('Invalid file type')
     return redirect(url_for('index'))
+
 
 @app.route('/file/<filename>')
 def get_file(filename):
@@ -154,21 +163,20 @@ def get_file(filename):
         flash(f'Error downloading file: {str(e)}')
         return redirect(url_for('index'))
 
+
 @app.route('/description/<filename>')
 def get_description(filename):
     try:
-         # Correctly get the base name *without* the extension
+        # Correctly get the base name *without* the extension
         base_name = os.path.splitext(filename)[0]
-        # Construct the json filename with the base_name
+        # Construct the JSON filename with the base_name
         json_filename = f"{base_name}_description.json"
-
 
         blob = bucket.blob(json_filename)
         description_data = json.loads(blob.download_as_string())
         return description_data['description']
     except Exception as e:
         return f"Error retrieving description: {str(e)}"
-
 
 
 if __name__ == '__main__':
