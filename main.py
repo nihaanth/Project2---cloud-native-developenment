@@ -72,8 +72,6 @@ def index():
             # Get image description
             description_filename = os.path.splitext(blob.name)[0] + '_description.json'
             try:
-                description_blob = bucket.blob(description_filename)
-                description_data = json.loads(description_blob.download_as_string())
                 image_data.append({
                     'filename': blob.name,
                     'title': description_data.get('title', 'Untitled'),
@@ -152,8 +150,23 @@ def upload_file():
     flash('Invalid file type')
     return redirect(url_for('index'))
 
-
 @app.route('/file/<filename>')
+def get_fil(filename):
+
+    description_blob = bucket.blob(description_filename)
+    description_data = json.loads(description_blob.download_as_string())
+    html = f"""
+
+<body>
+<img src = "/image/{filename}">
+<p>
+{description_data}
+</p>
+</body>
+    """
+    
+
+@app.route('/image/<filename>')
 def get_file(filename):
     try:
         blob = bucket.blob(filename)
