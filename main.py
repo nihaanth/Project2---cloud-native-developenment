@@ -145,8 +145,8 @@ def upload_file():
 
 @app.route('/file/<filename>')
 def get_fil(filename):
-
-    description_blob = bucket.blob(filename)
+    f_name = filename.split('.')[0] + '_description.json'
+    description_blob = bucket.blob(f_name)
     description_data = None
     with description_blob.open("r") as file_object:
         description_data = file_object.read()
