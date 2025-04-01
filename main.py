@@ -159,6 +159,7 @@ def get_fil(filename):
 </p>
 </body>
     """
+    return html
     
 
 @app.route('/image/<filename>')
