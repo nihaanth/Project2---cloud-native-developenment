@@ -149,7 +149,7 @@ def get_fil(filename):
     description_blob = bucket.blob(filename)
     description_data = None
     with description_blob.open("r") as file_object:
-        desctiption_data = file_object.read()
+        description_data = file_object.read()
     html = f"""
 
 <body>
