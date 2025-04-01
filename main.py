@@ -146,7 +146,7 @@ def upload_file():
 @app.route('/file/<filename>')
 def get_fil(filename):
 
-    description_blob = bucket.blob(description_filename)
+    description_blob = bucket.blob(filename)
     description_data = json.loads(description_blob.download_as_string())
     html = f"""
 
