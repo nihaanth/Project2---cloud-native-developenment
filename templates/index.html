@@ -18,8 +18,8 @@
         {% for image in image_data %}
         <div class="image-item">
             <img src="{{ url_for('view_image', imagename=image.filename) }}" alt="{{ image.filename }}" style="max-width: 300px;">
-            <h3>{{ image.title }}</h3>
-            <p><strong>Description:</strong> {{ image.description }}</p>
+            <!-- <h3>{{ image.title }}</h3>
+            <p><strong>Description:</strong> {{ image.description }}</p> -->
         </div>
         {% endfor %}
     </div>
