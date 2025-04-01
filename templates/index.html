@@ -16,12 +16,10 @@
 
     <div class="image-list">
         {% for image in image_data %}
-        <div class="image-item" style="margin-bottom: 30px; background-color: white; padding: 10px;">
-            <h2>{{ image.filename }}</h2>
-            <img src="{{ url_for('view_image', imagename=image.filename) }}" alt="{{ image.filename }}" style="max-width: 400px;">
-            <div>
-                <p><strong>Description:</strong> {{ image.description }}</p>
-            </div>
+        <div class="image-item">
+            <img src="{{ url_for('view_image', imagename=image.filename) }}" alt="{{ image.filename }}" style="max-width: 300px;">
+            <h3>{{ image.title }}</h3>
+            <p><strong>Description:</strong> {{ image.description }}</p>
         </div>
         {% endfor %}
     </div>
