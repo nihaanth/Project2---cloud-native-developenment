@@ -88,13 +88,6 @@ def index():
     return render_template('index.html', image_data=image_data)
 
 
-@app.route('/images/<imagename>')
-def view_image(imagename):
-    blob = bucket.blob(imagename)
-    file_data = blob.download_as_bytes()
-    return Response(io.BytesIO(file_data), mimetype='image/jpeg')
-
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
