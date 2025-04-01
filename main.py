@@ -147,7 +147,9 @@ def upload_file():
 def get_fil(filename):
 
     description_blob = bucket.blob(filename)
-    description_data = json.loads(description_blob.download_as_string())
+    description_data = None
+    with description_blob.open("r") as file_object:
+        desctiption_data = file_object.read()
     html = f"""
 
 <body>
