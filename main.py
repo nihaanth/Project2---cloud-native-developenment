@@ -40,7 +40,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def process_image_with_gemini(file):
-    """Process image using Gemini AI and return description"""
+    """Process image using Gemini AI and return title and description"""
     
     try:
         response = model.generate_content(
@@ -48,16 +48,23 @@ def process_image_with_gemini(file):
         )
         
         if response and response.text:  # Check if a valid response was received
-            return response.text
+            # Try to parse the JSON response
+            try:
+                # The response should be JSON format with title and description
+                json_data = json.loads(response.text)
+                return json_data
+            except json.JSONDecodeError:
+                # If not valid JSON, return as is
+                return {"title": "Untitled", "description": response.text}
         else:  # Gemini returned an empty response
-            return "Gemini returned no content"
+            return {"title": "Untitled", "description": "No description available"}
     except Exception as e:
         print(f"Error processing image with Gemini: {str(e)}")
-        return f"Error processing image with Gemini: {str(e)}"
+        return {"title": "Error", "description": f"Error processing image: {str(e)}"}
 
 @app.route('/')
 def index():
-    image_data = []  # Will hold image filename and description data
+    image_data = []  # Will hold image filename, title and description data
     
     blobs = bucket.list_blobs()
     for blob in blobs:
@@ -69,12 +76,14 @@ def index():
                 description_data = json.loads(description_blob.download_as_string())
                 image_data.append({
                     'filename': blob.name,
+                    'title': description_data.get('title', 'Untitled'),
                     'description': description_data.get('description', 'No description available')
                 })
             except Exception as e:
                 print(f"Error fetching description for {blob.name}: {str(e)}")
                 image_data.append({
                     'filename': blob.name,
+                    'title': 'Untitled',
                     'description': 'No description available'
                 })
 
@@ -112,13 +121,11 @@ def upload_file():
             blob.upload_from_filename(local_path)
 
             # Process with Gemini AI
-            description = process_image_with_gemini(file)
+            description_data = process_image_with_gemini(file)
 
-            if description:
-                print(f"Gemini Description: {description}")
-                # Create description object with metadata
-                description_data = {'description': description}
-
+            if description_data:
+                print(f"Gemini Description Data: {description_data}")
+                
                 # Correctly get the base name *without* the extension
                 base_name = os.path.splitext(filename)[0]
                 # Construct the JSON filename with the base_name
@@ -174,7 +181,7 @@ def get_description(filename):
 
         blob = bucket.blob(json_filename)
         description_data = json.loads(blob.download_as_string())
-        return description_data['description']
+        return description_data
     except Exception as e:
         return f"Error retrieving description: {str(e)}"
 
