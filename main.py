@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key'
 
 # Configuration
-GOOGLE_CLOUD_PROJECT = "data-infinity-448723-g8"
+
 BUCKET_NAME = "photos-app"
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
