@@ -1,27 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Gallery</title>
-</head>
-<body style='background-color:white;'>
-    <h1>Image Gallery</h1>
+    </head>
+<body>
+    <div> <h1>Image Gallery</h1>
 
-    <!-- Form to upload an image -->
-    <div class="upload-form">
-        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif">
-            <input type="submit" value="Upload Image">
-        </form>
-    </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul> {% for category, message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
 
-    <div class="image-list">
-        {% for image in image_data %}
-        <div class="image-item">
-            <a href="/file/{{image.filename}}">{{image.filename}}</a>
-            <!-- <h3>{{ image.title }}</h3>
-            <p><strong>Description:</strong> {{ image.description }}</p> -->
+        <div> <h2>Upload New Image</h2>
+            <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif" required>
+                <input type="submit" value="Upload Image">
+            </form>
         </div>
-        {% endfor %}
+
+        <h2>Uploaded Images</h2>
+        {% if image_data %}
+            <ul> {% for image in image_data %}
+                <li> <a href="{{ url_for('view_image_details', filename=image.filename) }}">
+                        {{ image.title | default('View Image', true) }} ({{ image.filename }})
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No images have been uploaded yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    </head>
+<body>
+    <div> <h1>{{ title }}</h1>
+
+        <img src="{{ image_url }}" alt="{{ title }}">
+
+        <p>{{ description }}</p>
+
+        <a href="{{ url_for('index') }}">&laquo; Back to Gallery</a>
+         <p><small><a href="{{ url_for('get_image_file', filename=filename) }}" target="_blank">View raw image</a></small></p>
     </div>
 </body>
 </html>
