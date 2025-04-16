@@ -27,7 +27,7 @@
         <h2>Uploaded Images</h2>
         {% if image_data %}
             <ul> {% for image in image_data %}
-                <li> <a href="{{ url_for('view_image_details', filename=image.filename) }}">
+                <li> <a href="{{ url_for('view_image_details', filename=image.filename) }}" target="_blank">
                         {{ image.title | default('View Image', true) }} ({{ image.filename }})
                     </a>
                 </li>
